@@ -1,0 +1,46 @@
+# ---- Python / Backend ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+backend/venv/
+backend/.venv/
+venv/
+.venv/
+env/
+.Python
+
+# Banco de dados (NUNCA commitar — contém dados e é gerado pelo seed.py)
+*.db
+*.sqlite
+*.sqlite3
+backend/vrconcursos.db
+
+# ---- Node / Frontend ----
+node_modules/
+frontend/node_modules/
+dist/
+build/
+frontend/dist/
+frontend/build/
+.vite/
+
+# ---- Logs ----
+*.log
+frontend/vite.out.log
+frontend/vite.err.log
+logs/
+
+# ---- Variáveis de ambiente / segredos ----
+.env
+.env.*
+*.env
+!*.env.example
+
+# ---- OS / Editor ----
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo

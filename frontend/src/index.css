@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Transição suave padrão em qualquer elemento interativo */
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  [role='button'] {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease,
+      box-shadow 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  }
+
+  /* Foco visível acessível e bonito */
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
+    border-radius: 0.5rem;
+  }
+
+  ::selection {
+    background: #dbeafe;
+    color: #1e3a8a;
+  }
+}
+
+@layer components {
+  /* Card que eleva e ganha borda colorida ao passar o mouse */
+  .hover-lift {
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease,
+      border-color 0.3s ease;
+    will-change: transform;
+  }
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 36px -12px rgba(15, 29, 61, 0.22);
+    border-color: rgba(59, 130, 246, 0.35);
+  }
+
+  /* Botão com leve elevação e "press" no clique */
+  .btn-pop {
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease,
+      background-color 0.2s ease, color 0.2s ease;
+  }
+  .btn-pop:hover {
+    transform: translateY(-1px);
+  }
+  .btn-pop:active {
+    transform: translateY(0) scale(0.97);
+  }
+
+  /* Ícone/botão circular que cresce suavemente no hover */
+  .icon-pop {
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease,
+      color 0.2s ease;
+  }
+  .icon-pop:hover {
+    transform: scale(1.15);
+  }
+
+  /* Linha de lista/tabela com realce lateral no hover */
+  .row-hover {
+    transition: background-color 0.18s ease, transform 0.18s ease;
+  }
+  .row-hover:hover {
+    transform: translateX(2px);
+  }
+}
+
+@layer utilities {
+  /* Fade em cascata para listas e seções */
+  .stagger > * {
+    animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .stagger > *:nth-child(1) { animation-delay: 0.04s; }
+  .stagger > *:nth-child(2) { animation-delay: 0.08s; }
+  .stagger > *:nth-child(3) { animation-delay: 0.12s; }
+  .stagger > *:nth-child(4) { animation-delay: 0.16s; }
+  .stagger > *:nth-child(5) { animation-delay: 0.20s; }
+  .stagger > *:nth-child(6) { animation-delay: 0.24s; }
+  .stagger > *:nth-child(7) { animation-delay: 0.28s; }
+  .stagger > *:nth-child(8) { animation-delay: 0.32s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #93c5fd, #60a5fa);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #60a5fa, #3b82f6);
+}
