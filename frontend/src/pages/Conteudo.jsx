@@ -159,13 +159,13 @@ export default function Conteudo() {
         )}
         {materias.map((m) => (
           <div key={m.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 cursor-pointer" onClick={() => toggleExpand(`mat-${m.id}`)}>
-              <div className="flex items-center gap-2">
-                {expanded[`mat-${m.id}`] ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}
-                <span className="font-semibold text-gray-900 text-sm">{m.nome}</span>
-                {!m.ativo && <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">Inativa</span>}
+            <div className="flex items-center justify-between gap-2 px-4 py-3 hover:bg-gray-50 cursor-pointer" onClick={() => toggleExpand(`mat-${m.id}`)}>
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                {expanded[`mat-${m.id}`] ? <ChevronDown size={16} className="shrink-0 text-gray-400" /> : <ChevronRight size={16} className="shrink-0 text-gray-400" />}
+                <span className="truncate font-semibold text-gray-900 text-sm">{m.nome}</span>
+                {!m.ativo && <span className="shrink-0 text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">Inativa</span>}
               </div>
-              <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+              <div className="flex shrink-0 items-center gap-1" onClick={e => e.stopPropagation()}>
                 <button onClick={() => openAssCreate(m.id)} className="text-[11px] text-primary-600 hover:bg-primary-50 px-2 py-1 rounded">+ Assunto</button>
                 <button onClick={() => openMatEdit(m)} className="text-gray-400 hover:text-primary-600 p-1"><Pencil size={14} /></button>
                 <button onClick={() => deleteMat(m.id)} className="text-gray-400 hover:text-red-600 p-1"><Trash2 size={14} /></button>
@@ -179,12 +179,12 @@ export default function Conteudo() {
                 ) : (
                   (m.assuntos || []).map((a) => (
                     <div key={a.id} className="border-b border-gray-100 last:border-0">
-                      <div className="flex items-center justify-between px-6 py-2.5 hover:bg-gray-100/50 cursor-pointer" onClick={() => toggleExpand(`ass-${a.id}`)}>
-                        <div className="flex items-center gap-2">
-                          {expanded[`ass-${a.id}`] ? <ChevronDown size={14} className="text-gray-400" /> : <ChevronRight size={14} className="text-gray-400" />}
-                          <span className="font-medium text-gray-700 text-sm">{a.nome}</span>
+                      <div className="flex items-center justify-between gap-2 px-4 py-2.5 hover:bg-gray-100/50 cursor-pointer sm:px-6" onClick={() => toggleExpand(`ass-${a.id}`)}>
+                        <div className="flex min-w-0 flex-1 items-center gap-2">
+                          {expanded[`ass-${a.id}`] ? <ChevronDown size={14} className="shrink-0 text-gray-400" /> : <ChevronRight size={14} className="shrink-0 text-gray-400" />}
+                          <span className="truncate font-medium text-gray-700 text-sm">{a.nome}</span>
                         </div>
-                        <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                        <div className="flex shrink-0 items-center gap-1" onClick={e => e.stopPropagation()}>
                           <button onClick={() => openTopCreate(a.id)} className="text-[10px] text-accent-600 hover:bg-accent-50 px-1.5 py-1 rounded">+ Tópico</button>
                           <button onClick={() => openAssEdit(a)} className="text-gray-400 hover:text-primary-600 p-1"><Pencil size={13} /></button>
                           <button onClick={() => deleteAss(a.id)} className="text-gray-400 hover:text-red-600 p-1"><Trash2 size={13} /></button>
@@ -192,11 +192,12 @@ export default function Conteudo() {
                       </div>
 
                       {expanded[`ass-${a.id}`] && (
-                        <div className="px-8 py-1 pb-2">
+                        <div className="px-3 py-1 pb-2 sm:px-8">
                           {(a.topicos || []).length === 0 ? (
                             <p className="text-xs text-gray-400 py-1">Nenhum tópico.</p>
                           ) : (
-                            <table className="w-full text-xs">
+                            <div className="overflow-x-auto">
+                            <table className="w-full min-w-[520px] text-xs">
                               <thead>
                                 <tr className="text-[10px] text-gray-400 uppercase">
                                   <th className="text-left py-1.5 font-medium">Tópico</th>
@@ -254,6 +255,7 @@ export default function Conteudo() {
                                 })}
                               </tbody>
                             </table>
+                            </div>
                           )}
                         </div>
                       )}

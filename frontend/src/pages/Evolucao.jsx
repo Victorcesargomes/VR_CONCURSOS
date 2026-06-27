@@ -244,7 +244,7 @@ export default function Evolucao() {
           </div>
         ) : (
           <div className="space-y-3 p-3">
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 xl:grid-cols-5">
               <KpiCard label="Questões" value={dashboard.total_questoes} tone="blue" />
               <KpiCard label="% líquido" value={`${dashboard.percentual_geral_liquido}%`} tone="green" />
               <KpiCard label="% bruta" value={`${taxaAcerto}%`} tone="slate" />
