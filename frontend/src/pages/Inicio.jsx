@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AlertTriangle, BookOpenCheck, CalendarDays, CheckCircle2, Clock, FileQuestion, ListChecks, Pencil, PlayCircle, Plus, Target, Trash2, TrendingUp } from 'lucide-react'
+import { AlertTriangle, BookOpenCheck, CalendarDays, CheckCircle2, Clock, FileQuestion, LayoutDashboard, ListChecks, Pencil, PlayCircle, Plus, Target, Trash2, TrendingUp } from 'lucide-react'
 import { assuntosAPI, calendarioAPI, desempenhoAPI, materiasAPI, revisoesAPI, sessoesAPI, topicosAPI } from '../api'
 import StatCard from '../components/Cards/StatCard'
+import PageHeader from '../components/Layout/PageHeader'
 
 const DIAS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
 const todayIso = () => new Date().toISOString().slice(0, 10)
@@ -263,15 +264,15 @@ export default function Inicio() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">Painel de estudos</h2>
-          <p className="text-sm text-gray-500">Organize a semana, registre cada tentativa e acompanhe a evolução por período.</p>
-        </div>
+      <PageHeader
+        icon={LayoutDashboard}
+        title="Painel de estudos"
+        subtitle="Organize a semana, registre cada tentativa e acompanhe a evolução por período."
+      >
         {topicos.length > 0 && <button onClick={abrirSessaoLivre} className="btn-pop inline-flex items-center gap-2 rounded-lg bg-primary-700 px-4 py-2 text-sm font-semibold text-white shadow-glow-primary hover:bg-primary-600">
           <Plus size={16} /> Registrar estudo
         </button>}
-      </div>
+      </PageHeader>
 
       {sistemaVazio && (
         <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">

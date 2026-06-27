@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { materiasAPI, assuntosAPI, topicosAPI, desempenhoAPI, sessoesAPI } from '../api'
 import { Plus, Pencil, Trash2, ChevronDown, ChevronRight, ClipboardEdit } from 'lucide-react'
+import PageHeader from '../components/Layout/PageHeader'
 
 const prioridadeLabel = { baixa: 'Baixa', media: 'Média', alta: 'Alta' }
 const prioridadeColor = { baixa: 'bg-slate-100 text-slate-600', media: 'bg-amber-100 text-amber-700', alta: 'bg-red-100 text-red-700' }
@@ -139,15 +140,15 @@ export default function Conteudo() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">Conteúdo</h2>
-          <p className="text-xs text-gray-500 mt-0.5">{materias.length} matérias</p>
-        </div>
+      <PageHeader
+        icon={ClipboardEdit}
+        title="Conteúdo"
+        subtitle={`${materias.length} matéria${materias.length === 1 ? '' : 's'} cadastrada${materias.length === 1 ? '' : 's'}`}
+      >
         <button onClick={openMatCreate} className="btn-pop inline-flex items-center gap-1.5 bg-primary-700 hover:bg-primary-600 text-white px-3 py-2 rounded-lg text-sm font-medium shadow-glow-primary">
           <Plus size={15} /> Matéria
         </button>
-      </div>
+      </PageHeader>
 
       <div className="stagger space-y-2">
         {materias.length === 0 && (

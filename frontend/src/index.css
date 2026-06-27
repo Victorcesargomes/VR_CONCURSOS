@@ -27,13 +27,13 @@
   /* Foco visível acessível e bonito */
   :focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 0 3px rgba(0, 166, 125, 0.4);
     border-radius: 0.5rem;
   }
 
   ::selection {
-    background: #dbeafe;
-    color: #1e3a8a;
+    background: #c2ecdf;
+    color: #003b2e;
   }
 }
 
@@ -46,8 +46,8 @@
   }
   .hover-lift:hover {
     transform: translateY(-4px);
-    box-shadow: 0 18px 36px -12px rgba(15, 29, 61, 0.22);
-    border-color: rgba(59, 130, 246, 0.35);
+    box-shadow: 0 18px 36px -12px rgba(0, 43, 92, 0.24);
+    border-color: rgba(0, 166, 125, 0.30);
   }
 
   /* Botão com leve elevação e "press" no clique */
@@ -113,9 +113,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #93c5fd, #60a5fa);
+  background: linear-gradient(180deg, #7e9cc4, #4d74a6);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #60a5fa, #3b82f6);
+  background: linear-gradient(180deg, #4d74a6, #1bb18e);
 }

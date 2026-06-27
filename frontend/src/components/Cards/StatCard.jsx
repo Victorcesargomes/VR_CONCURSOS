@@ -6,9 +6,17 @@ export default function StatCard({ label, value, icon: Icon, color = 'primary', 
     rose: 'bg-rose-50 text-rose-700 border-rose-200 group-hover:bg-rose-100',
     slate: 'bg-slate-50 text-slate-700 border-slate-200 group-hover:bg-slate-100',
   }
+  const barClasses = {
+    primary: 'from-primary-400 to-primary-600',
+    accent: 'from-accent-400 to-accent-600',
+    amber: 'from-amber-400 to-amber-500',
+    rose: 'from-rose-400 to-rose-500',
+    slate: 'from-slate-400 to-slate-500',
+  }
 
   return (
-    <div className={`hover-lift group bg-white rounded-xl border border-gray-200 p-5 shadow-card ${className}`}>
+    <div className={`hover-lift group relative overflow-hidden bg-white rounded-xl border border-gray-200 p-5 shadow-card ${className}`}>
+      <span className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${barClasses[color] || barClasses.primary} opacity-80`} />
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-gray-500 font-medium">{label}</p>

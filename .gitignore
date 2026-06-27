@@ -25,6 +25,9 @@ frontend/dist/
 frontend/build/
 .vite/
 
+# Logo em alta resolução (asset de origem). A versão otimizada está em frontend/public/logo.png
+frontend/VRCONCURSOS.png
+
 # ---- Logs ----
 *.log
 frontend/vite.out.log
