@@ -1,37 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { AlertTriangle, BarChart3, ChevronDown, Target } from 'lucide-react'
-import { assuntosAPI, desempenhoAPI, materiasAPI } from '../api'
-
-const statusOrder = ['Dominado', 'Bom', 'Atencao', 'Critico']
-
-const normalizeStatus = (status = '') => {
-  if (status === 'Dominado') return 'Dominado'
-  if (status === 'Bom') return 'Bom'
-  if (status.toLowerCase().startsWith('aten')) return 'Atencao'
-  if (status.toLowerCase().startsWith('cr')) return 'Critico'
-  return 'Sem dados'
-}
-
-const statusMeta = {
-  Dominado: { label: 'Dominado', color: '#10b981', badge: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
-  Bom: { label: 'Bom', color: '#2563eb', badge: 'text-blue-700 bg-blue-50 border-blue-200' },
-  Atencao: { label: 'Atenção', color: '#f59e0b', badge: 'text-amber-700 bg-amber-50 border-amber-200' },
-  Critico: { label: 'Crítico', color: '#ef4444', badge: 'text-red-700 bg-red-50 border-red-200' },
-  'Sem dados': { label: 'Sem dados', color: '#94a3b8', badge: 'text-gray-600 bg-gray-50 border-gray-200' },
-}
+import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { AlertTriangle, BarChart3, ChevronDown, Filter, LayoutGrid, Target, TrendingUp } from 'lucide-react'
+import { assuntosAPI, desempenhoAPI, materiasAPI, revisoesAPI } from '../api'
+import EvolutionLine from '../components/Charts/EvolutionLine'
+import MateriasDonut from '../components/Charts/MateriasDonut'
+import TopicsHeatmap from '../components/Charts/TopicsHeatmap'
+import VolumeScatter from '../components/Charts/VolumeScatter'
+import MateriasRadar from '../components/Charts/MateriasRadar'
+import ReviewFunnel from '../components/Charts/ReviewFunnel'
+import { normalizeStatus, pctColor, shortName, statusMeta, statusOrder } from '../components/Charts/chartTheme'
 
 const prioridadeLabel = { baixa: 'Baixa', media: 'Média', alta: 'Alta' }
 const prioridadeColor = { baixa: 'bg-slate-100 text-slate-600', media: 'bg-amber-100 text-amber-700', alta: 'bg-red-100 text-red-700' }
-
-const pctColor = (pct) => {
-  if (pct >= 85) return '#10b981'
-  if (pct >= 70) return '#2563eb'
-  if (pct >= 50) return '#f59e0b'
-  return '#ef4444'
-}
-
-const shortName = (value = '', size = 24) => value.length > size ? `${value.slice(0, size)}...` : value
 
 const hojeIso = () => new Date().toISOString().slice(0, 10)
 const diasAtrasIso = (n) => {
@@ -63,6 +43,7 @@ export default function Evolucao() {
   const [assuntos, setAssuntos] = useState([])
   const [assuntoData, setAssuntoData] = useState(null)
   const [historicoData, setHistoricoData] = useState(null)
+  const [resumoRevisoes, setResumoRevisoes] = useState(null)
   const [loading, setLoading] = useState(true)
   const [assuntoLoading, setAssuntoLoading] = useState(false)
   const [selectedMateria, setSelectedMateria] = useState('')
@@ -116,12 +97,14 @@ export default function Evolucao() {
       desempenhoAPI.materias(paramsPeriodo),
       desempenhoAPI.topicos(paramsPeriodo),
       materiasAPI.list(),
+      revisoesAPI.resumo(),
     ])
-      .then(([dash, mats, tops, allMats]) => {
+      .then(([dash, mats, tops, allMats, rev]) => {
         setDashboard(dash.data)
         setMaterias(mats.data)
         setTodosTopicos(tops.data)
         setTodasMaterias(allMats.data)
+        setResumoRevisoes(rev.data)
         if (!selectedMateria && allMats.data[0]) setSelectedMateria(String(allMats.data[0].id))
       })
       .finally(() => setLoading(false))
@@ -192,6 +175,15 @@ export default function Evolucao() {
   const totalErros = materiasComQuestoes.reduce((sum, m) => sum + Number(m.erros || 0), 0)
   const taxaAcerto = (totalAcertos + totalErros) > 0 ? Math.round((totalAcertos / (totalAcertos + totalErros)) * 1000) / 10 : 0
   const temDados = (dashboard?.total_questoes || 0) > 0
+
+  const donutData = useMemo(
+    () => materiasComQuestoes.map((m) => ({ name: m.materia_nome, value: m.total_questoes })),
+    [materiasComQuestoes]
+  )
+  const radarData = useMemo(
+    () => materiasComQuestoes.map((m) => ({ subject: shortName(m.materia_nome, 12), A: m.percentual_liquido, full: m.materia_nome })),
+    [materiasComQuestoes]
+  )
 
   const openHistorico = (topicoId) => {
     setSelectedTopico(topicoId)
@@ -330,6 +322,62 @@ export default function Evolucao() {
           </div>
         )}
       </section>
+
+      {temDados && (
+        <section className="animate-fade-in-up rounded-xl border border-gray-200 bg-white p-4 shadow-card">
+          <div className="mb-3 flex items-center gap-2">
+            <TrendingUp size={16} className="text-primary-700" />
+            <div>
+              <h3 className="text-sm font-semibold text-gray-800">Evolução e distribuição</h3>
+              <p className="text-xs text-gray-500">Tendência semanal e repartição do esforço por matéria.</p>
+            </div>
+          </div>
+          <div className="grid gap-3 lg:grid-cols-2">
+            <ChartPanel title="Evolução semanal (% líquido)">
+              <EvolutionLine data={volumeSemanal} />
+            </ChartPanel>
+            <ChartPanel title="Distribuição de questões por matéria">
+              <MateriasDonut data={donutData} />
+            </ChartPanel>
+          </div>
+        </section>
+      )}
+
+      {temDados && (
+        <section className="animate-fade-in-up rounded-xl border border-gray-200 bg-white p-4 shadow-card">
+          <div className="mb-3 flex items-center gap-2">
+            <LayoutGrid size={16} className="text-primary-700" />
+            <div>
+              <h3 className="text-sm font-semibold text-gray-800">Análise avançada</h3>
+              <p className="text-xs text-gray-500">Onde estão os erros, correlação volume×desempenho e equilíbrio entre matérias.</p>
+            </div>
+          </div>
+          <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
+            <ChartPanel title="Mapa de calor por assunto">
+              <TopicsHeatmap topicos={topicosFiltrados} />
+            </ChartPanel>
+            <ChartPanel title="Volume × desempenho">
+              <VolumeScatter topicos={topicosFiltrados} />
+            </ChartPanel>
+            <ChartPanel title="Equilíbrio entre matérias">
+              <MateriasRadar data={radarData} />
+            </ChartPanel>
+          </div>
+        </section>
+      )}
+
+      {temDados && (
+        <section className="animate-fade-in-up rounded-xl border border-gray-200 bg-white p-4 shadow-card">
+          <div className="mb-3 flex items-center gap-2">
+            <Filter size={16} className="text-primary-700" />
+            <div>
+              <h3 className="text-sm font-semibold text-gray-800">Funil de erros e revisão</h3>
+              <p className="text-xs text-gray-500">Pipeline do erro até a revisão pendente.</p>
+            </div>
+          </div>
+          <ReviewFunnel questoes={dashboard?.total_questoes || 0} erros={totalErros} resumo={resumoRevisoes} />
+        </section>
+      )}
 
       {temDados && (
         <div className="animate-fade-in-up grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
