@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AlertTriangle, BookOpenCheck, CalendarDays, CheckCircle2, Clock, FileQuestion, LayoutDashboard, ListChecks, Pencil, PlayCircle, Plus, Target, Trash2, TrendingUp } from 'lucide-react'
-import { assuntosAPI, calendarioAPI, desempenhoAPI, materiasAPI, revisoesAPI, sessoesAPI, topicosAPI } from '../api'
+import { AlertTriangle, BookOpenCheck, CalendarDays, CheckCircle2, Clock, FileQuestion, Flame, LayoutDashboard, ListChecks, Pencil, PlayCircle, Plus, Target, Trash2, TrendingUp } from 'lucide-react'
+import { assuntosAPI, calendarioAPI, desempenhoAPI, editaisAPI, engajamentoAPI, materiasAPI, revisoesAPI, sessoesAPI, topicosAPI } from '../api'
 import StatCard from '../components/Cards/StatCard'
 import PageHeader from '../components/Layout/PageHeader'
+import { pctColor } from '../components/Charts/chartTheme'
 
 const DIAS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
 const todayIso = () => new Date().toISOString().slice(0, 10)
@@ -35,6 +36,8 @@ export default function Inicio() {
   const [resumoRevisoes, setResumoRevisoes] = useState(null)
   const [revisoes, setRevisoes] = useState([])
   const [sessoesRecentes, setSessoesRecentes] = useState([])
+  const [prontidao, setProntidao] = useState(null)
+  const [engajamento, setEngajamento] = useState(null)
   const [dias, setDias] = useState([])
   const [materias, setMaterias] = useState([])
   const [assuntos, setAssuntos] = useState([])
@@ -84,6 +87,18 @@ export default function Inicio() {
     setAssuntos(a.data)
     setTopicos(t.data)
     setSessoesRecentes(s.data)
+    try {
+      const p = await editaisAPI.readinessAtivo()
+      setProntidao(p.data)
+    } catch {
+      setProntidao(null)
+    }
+    try {
+      const e = await engajamentoAPI.stats()
+      setEngajamento(e.data)
+    } catch {
+      setEngajamento(null)
+    }
   }
 
   useEffect(() => {
@@ -235,7 +250,7 @@ export default function Inicio() {
   const salvarSessao = async (event) => {
     event.preventDefault()
     const total = Number(sessaoForm.acertos) + Number(sessaoForm.erros)
-    await sessoesAPI.create({
+    const res = await sessoesAPI.create({
       ...sessaoForm,
       topico_id: Number(sessaoForm.topico_id),
       acertos: Number(sessaoForm.acertos),
@@ -244,6 +259,9 @@ export default function Inicio() {
       revisao_id: sessaoForm.revisao_id || undefined,
     })
     setShowSessaoModal(false)
+    if (res.data.novas_conquistas?.length) {
+      window.dispatchEvent(new CustomEvent('vr-conquistas', { detail: res.data.novas_conquistas }))
+    }
     await recarregar()
   }
 
@@ -269,10 +287,35 @@ export default function Inicio() {
         title="Painel de estudos"
         subtitle="Organize a semana, registre cada tentativa e acompanhe a evolução por período."
       >
+        {engajamento && (
+          <Link to="/conquistas" className="hidden items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm sm:flex">
+            <Flame size={16} className="text-amber-500" />
+            <span className="font-semibold text-amber-700">{engajamento.streak_atual}d</span>
+            <span className="text-amber-600/70">· meta {engajamento.meta_hoje?.hoje_questoes ?? 0}/{engajamento.meta_hoje?.meta_questoes ?? 40}</span>
+          </Link>
+        )}
         {topicos.length > 0 && <button onClick={abrirSessaoLivre} className="btn-pop inline-flex items-center gap-2 rounded-lg bg-primary-700 px-4 py-2 text-sm font-semibold text-white shadow-glow-primary hover:bg-primary-600">
           <Plus size={16} /> Registrar estudo
         </button>}
       </PageHeader>
+
+      {prontidao && (
+        <Link to="/prontidao" className="hover-lift group mb-1 flex flex-wrap items-center gap-4 rounded-xl border border-primary-700/30 bg-gradient-to-r from-primary-800 to-primary-950 p-4 text-white shadow-card">
+          <div className="relative h-12 w-12 shrink-0 rounded-full" style={{ background: `conic-gradient(${pctColor(prontidao.score || 0)} 0deg ${(prontidao.score || 0) * 3.6}deg, rgba(255,255,255,0.15) ${(prontidao.score || 0) * 3.6}deg 360deg)` }}>
+            <div className="absolute inset-[5px] flex items-center justify-center rounded-full bg-primary-900">
+              <span className="text-sm font-extrabold leading-none" style={{ color: pctColor(prontidao.score || 0) }}>{Math.round(prontidao.score || 0)}</span>
+            </div>
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold">Prontidão para a prova</p>
+            <p className="text-xs text-primary-200">
+              {prontidao.dias_para_prova != null ? <>Faltam <strong className="text-white">{prontidao.dias_para_prova} dias</strong> · </> : null}
+              cobertura {prontidao.cobertura}% · desempenho {prontidao.liquido}% · tendência {prontidao.tendencia}
+            </p>
+          </div>
+          <span className="btn-pop ml-auto rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white group-hover:bg-white/20">Ver detalhes →</span>
+        </Link>
+      )}
 
       {sistemaVazio && (
         <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">

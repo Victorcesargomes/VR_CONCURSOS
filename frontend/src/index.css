@@ -109,6 +109,30 @@
   width: 8px;
   height: 8px;
 }
+
+/* Impressão / Exportar PDF: oculta sidebar e ações, expande o conteúdo */
+@media print {
+  aside,
+  header,
+  .no-print {
+    display: none !important;
+  }
+  html,
+  body,
+  #root {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  main {
+    overflow: visible !important;
+    height: auto !important;
+  }
+  .max-w-7xl {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+}
 ::-webkit-scrollbar-track {
   background: transparent;
 }

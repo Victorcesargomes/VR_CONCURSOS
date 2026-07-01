@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { AlertTriangle, BarChart3, ChevronDown, Filter, LayoutGrid, Target, TrendingUp } from 'lucide-react'
-import { assuntosAPI, desempenhoAPI, materiasAPI, revisoesAPI } from '../api'
+import { AlertTriangle, BarChart3, ChevronDown, Download, Filter, LayoutGrid, Printer, Target, TrendingUp } from 'lucide-react'
+import { assuntosAPI, desempenhoAPI, downloadCSV, materiasAPI, revisoesAPI } from '../api'
 import EvolutionLine from '../components/Charts/EvolutionLine'
 import MateriasDonut from '../components/Charts/MateriasDonut'
 import TopicsHeatmap from '../components/Charts/TopicsHeatmap'
@@ -206,6 +206,12 @@ export default function Evolucao() {
             </div>
           </div>
           <div className="flex flex-wrap items-end gap-2">
+            <button onClick={() => downloadCSV('/desempenho/export.csv', 'desempenho.csv')} className="btn-pop no-print flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-primary-100 hover:bg-white/10">
+              <Download size={14} /> CSV
+            </button>
+            <button onClick={() => window.print()} className="btn-pop no-print flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-primary-100 hover:bg-white/10">
+              <Printer size={14} /> PDF
+            </button>
             {filtrosAtivos && (
               <button onClick={limparFiltros} className="btn-pop rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-primary-100 hover:bg-white/10">Limpar filtros</button>
             )}

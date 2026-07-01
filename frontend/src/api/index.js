@@ -44,6 +44,34 @@ export const sessoesAPI = {
   create: (data) => api.post('/sessoes/', data),
   update: (id, data) => api.put(`/sessoes/${id}`, data),
   delete: (id) => api.delete(`/sessoes/${id}`),
+  finalizarSimulado: (id, duracaoSegundos) => api.post(`/sessoes/${id}/finalizar-simulado`, { duracao_segundos: duracaoSegundos }),
+}
+
+export const questoesAPI = {
+  list: (params) => api.get('/questoes/', { params }),
+  cadernoErros: (params) => api.get('/questoes/caderno-erros', { params }),
+  create: (data) => api.post('/questoes/', data),
+  update: (id, data) => api.put(`/questoes/${id}`, data),
+  delete: (id) => api.delete(`/questoes/${id}`),
+}
+
+export const engajamentoAPI = {
+  stats: () => api.get('/engajamento/stats'),
+  conquistas: () => api.get('/engajamento/conquistas'),
+  avaliar: () => api.post('/engajamento/conquistas/avaliar'),
+}
+
+// Dispara download de um endpoint CSV (trata acentos via BOM já incluído no backend).
+export const downloadCSV = async (url, filename) => {
+  const res = await api.get(url, { responseType: 'blob' })
+  const blob = new Blob([res.data], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.setAttribute('download', filename)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(link.href)
 }
 
 export const revisoesAPI = {
@@ -59,4 +87,20 @@ export const desempenhoAPI = {
   topicos: (params) => api.get('/desempenho/topicos', { params }),
   assuntoDetalhe: (assuntoId, params) => api.get(`/desempenho/assunto/${assuntoId}`, { params }),
   historicoTopico: (topicoId, params) => api.get(`/desempenho/topico/${topicoId}/historico`, { params }),
+}
+
+export const editaisAPI = {
+  list: () => api.get('/editais/'),
+  get: (id) => api.get(`/editais/${id}`),
+  create: (data) => api.post('/editais/', data),
+  update: (id, data) => api.put(`/editais/${id}`, data),
+  delete: (id) => api.delete(`/editais/${id}`),
+  setMaterias: (id, materias) => api.put(`/editais/${id}/materias`, materias),
+  readinessAtivo: () => api.get('/editais/readiness'),
+  readiness: (id) => api.get(`/editais/${id}/readiness`),
+}
+
+export const metasAPI = {
+  get: (editalId) => api.get('/metas/', { params: { edital_id: editalId || undefined } }),
+  upsert: (data) => api.put('/metas/', data),
 }

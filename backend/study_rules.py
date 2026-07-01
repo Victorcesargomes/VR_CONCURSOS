@@ -101,3 +101,24 @@ def backfill_reviews(db: Session):
 
     db.commit()
     return created_count
+
+
+def sync_sessao_from_questoes(db: Session, sessao: SessaoEstudo):
+    """Recalcula os agregados da sessão (questoes_feitas/acertos/erros) a partir
+    das Questao filhas. Usado apenas no caminho de simulado (auto-correção).
+    Sessões registradas manualmente mantêm os agregados como fonte de verdade."""
+    answered = [q for q in sessao.questoes if q.acertou is not None]
+    sessao.questoes_feitas = len(answered)
+    sessao.acertos = sum(1 for q in answered if q.acertou)
+    sessao.erros = sum(1 for q in answered if not q.acertou)
+
+
+def score_simulado(db: Session, sessao_id: int):
+    """Sincroniza agregados de um simulado já preenchido com Questao e (re)agenda
+    revisões com base no desempenho geral."""
+    sessao = db.query(SessaoEstudo).filter(SessaoEstudo.id == sessao_id).first()
+    if not sessao:
+        return None
+    sync_sessao_from_questoes(db, sessao)
+    schedule_reviews(db, sessao)
+    return sessao

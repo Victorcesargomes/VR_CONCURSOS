@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base, SessionLocal
 from migrations import run_sqlite_migrations
-from routers import materias, assuntos, topicos, calendario, sessoes, desempenho, revisoes
+from routers import materias, assuntos, topicos, calendario, sessoes, desempenho, revisoes, editais, metas, questoes, engajamento
 from study_rules import backfill_reviews
 
 Base.metadata.create_all(bind=engine)
@@ -27,6 +27,10 @@ app.include_router(calendario.router)
 app.include_router(sessoes.router)
 app.include_router(desempenho.router)
 app.include_router(revisoes.router)
+app.include_router(editais.router)
+app.include_router(metas.router)
+app.include_router(questoes.router)
+app.include_router(engajamento.router)
 
 
 @app.get("/api/health")

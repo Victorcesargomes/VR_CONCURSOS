@@ -19,21 +19,22 @@ def _format(r):
     today_start, _ = _today_bounds()
     dias_atraso = max((today_start.date() - r.data_prevista.date()).days, 0)
     topico = r.topico
-    assunto = topico.assunto
+    assunto = topico.assunto if topico else None
+    materia = assunto.materia if assunto else None
     return {
         "id": r.id,
         "topico_id": r.topico_id,
-        "topico_nome": topico.nome,
-        "assunto_nome": assunto.nome,
-        "materia_nome": assunto.materia.nome,
+        "topico_nome": topico.nome if topico else None,
+        "assunto_nome": assunto.nome if assunto else None,
+        "materia_nome": materia.nome if materia else None,
         "data_prevista": r.data_prevista,
         "status": r.status,
         "etapa": r.etapa,
         "motivo": r.motivo,
         "percentual_liquido_origem": r.percentual_liquido_origem or 0,
         "dias_atraso": dias_atraso,
-        "prioridade": topico.prioridade.value if topico.prioridade else "media",
-        "peso": topico.peso or 1,
+        "prioridade": topico.prioridade.value if topico and topico.prioridade else "media",
+        "peso": (topico.peso or 1) if topico else 1,
     }
 
 
@@ -57,7 +58,8 @@ def listar(
         Revisao.percentual_liquido_origem.asc(),
     ).limit(limit).all()
 
-    return [_format(r) for r in revisoes]
+    # Ignora revisões órfãs (topico/assunto removidos) para não quebrar a listagem
+    return [_format(r) for r in revisoes if r.topico and r.topico.assunto]
 
 
 @router.get("/resumo")

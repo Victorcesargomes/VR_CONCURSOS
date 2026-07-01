@@ -1,102 +1,22 @@
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from sqlalchemy.orm import Session
 
+from csv_export import to_csv
 from database import get_db
 from models import Assunto, Materia, SessaoEstudo, Topico
+from stats_utils import (
+    classify,
+    compute_topic_stats,
+    filter_sessoes as _filter_sessoes,
+    query_sessoes as _query_sessoes,
+    sessoes_por_materia,
+    stats_from_sessoes as _stats_from_sessoes,
+    topicos_query as _topicos_query,
+)
 
 router = APIRouter(prefix="/api/desempenho", tags=["desempenho"])
-
-
-def _parse_date(value: str | None, end: bool = False):
-    if not value:
-        return None
-    parsed = datetime.fromisoformat(value)
-    if len(value) == 10 and end:
-        return parsed + timedelta(days=1)
-    return parsed
-
-
-def _filter_sessoes(sessoes, data_inicio: str | None = None, data_fim: str | None = None, tipos: list[str] | None = None):
-    start = _parse_date(data_inicio)
-    end = _parse_date(data_fim, end=True)
-    tipos_set = set(tipos) if tipos else None
-    result = []
-    for sessao in sessoes:
-        if start and sessao.data < start:
-            continue
-        if end and sessao.data >= end:
-            continue
-        if tipos_set and sessao.tipo not in tipos_set:
-            continue
-        result.append(sessao)
-    return result
-
-
-def classify(pct_liquido: float) -> str:
-    if pct_liquido >= 85:
-        return "Dominado"
-    if pct_liquido >= 70:
-        return "Bom"
-    if pct_liquido >= 50:
-        return "Atenção"
-    return "Crítico"
-
-
-def _stats_from_sessoes(sessoes):
-    total = sum(s.questoes_feitas for s in sessoes)
-    acertos = sum(s.acertos for s in sessoes)
-    erros = sum(s.erros for s in sessoes)
-    pct = round((acertos / total * 100) if total > 0 else 0, 1)
-    pct_liquido = round(((acertos - erros) / total * 100) if total > 0 else 0, 1)
-    return total, acertos, erros, pct, pct_liquido
-
-
-def _topicos_query(db: Session, materia_id: int | None = None, assunto_id: int | None = None):
-    query = db.query(Topico)
-    if assunto_id:
-        query = query.filter(Topico.assunto_id == assunto_id)
-    if materia_id:
-        query = query.join(Assunto).filter(Assunto.materia_id == materia_id)
-    return query
-
-
-def compute_topic_stats(topicos_query, data_inicio: str | None = None, data_fim: str | None = None, tipos: list[str] | None = None):
-    result = []
-    for t in topicos_query:
-        sessoes = _filter_sessoes(t.sessoes, data_inicio, data_fim, tipos)
-        total, acertos, erros, pct, pct_liquido = _stats_from_sessoes(sessoes)
-        result.append({
-            "topico_id": t.id,
-            "topico_nome": t.nome,
-            "assunto_nome": t.assunto.nome,
-            "materia_nome": t.assunto.materia.nome,
-            "prioridade": t.prioridade.value if t.prioridade else "media",
-            "total_questoes": total,
-            "acertos": acertos,
-            "erros": erros,
-            "percentual_acerto": pct,
-            "percentual_liquido": pct_liquido,
-            "classificacao": classify(pct_liquido),
-        })
-    result.sort(key=lambda x: x["percentual_liquido"])
-    return result
-
-
-def _query_sessoes(db: Session, data_inicio: str | None = None, data_fim: str | None = None, materia_id: int | None = None, tipos: list[str] | None = None):
-    query = db.query(SessaoEstudo)
-    start = _parse_date(data_inicio)
-    end = _parse_date(data_fim, end=True)
-    if start:
-        query = query.filter(SessaoEstudo.data >= start)
-    if end:
-        query = query.filter(SessaoEstudo.data < end)
-    if materia_id:
-        query = query.join(Topico).join(Assunto).filter(Assunto.materia_id == materia_id)
-    if tipos:
-        query = query.filter(SessaoEstudo.tipo.in_(tipos))
-    return query.all()
 
 
 @router.get("/dashboard")
@@ -133,10 +53,7 @@ def dashboard(
     if materia_id:
         materias_q = materias_q.filter(Materia.id == materia_id)
     for m in materias_q.all():
-        sessoes_m = []
-        for a in m.assuntos:
-            for t in a.topicos:
-                sessoes_m.extend(_filter_sessoes(t.sessoes, data_inicio, data_fim, tipos))
+        sessoes_m = sessoes_por_materia(m, data_inicio, data_fim, tipos)
         total_m, acertos_m, erros_m, pct_m, pct_l_m = _stats_from_sessoes(sessoes_m)
         ranking.append({
             "materia": m.nome,
@@ -169,10 +86,7 @@ def desempenho_materias(
 ):
     result = []
     for m in db.query(Materia).filter(Materia.ativo == True).all():
-        sessoes = []
-        for a in m.assuntos:
-            for t in a.topicos:
-                sessoes.extend(_filter_sessoes(t.sessoes, data_inicio, data_fim, tipos))
+        sessoes = sessoes_por_materia(m, data_inicio, data_fim, tipos)
         total, acertos, erros, pct, pct_liq = _stats_from_sessoes(sessoes)
         result.append({
             "materia_id": m.id,
@@ -305,3 +219,22 @@ def historico_topico(
         "prioridade": t.prioridade.value if t.prioridade else "media",
         "historico": historico,
     }
+
+
+@router.get("/export.csv")
+def exportar_csv(
+    materia_id: int = None,
+    assunto_id: int = None,
+    data_inicio: str = None,
+    data_fim: str = None,
+    tipos: list[str] | None = Query(None),
+    db: Session = Depends(get_db),
+):
+    stats = compute_topic_stats(_topicos_query(db, materia_id, assunto_id).all(), data_inicio, data_fim, tipos)
+    columns = ["materia_nome", "assunto_nome", "topico_nome", "prioridade",
+               "total_questoes", "acertos", "erros", "percentual_acerto", "percentual_liquido", "classificacao"]
+    return Response(
+        content=to_csv(stats, columns),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=desempenho.csv"},
+    )

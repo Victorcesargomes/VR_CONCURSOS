@@ -10,6 +10,9 @@ def run_sqlite_migrations(engine):
         if "tipo" not in columns:
             with engine.begin() as conn:
                 conn.execute(text("ALTER TABLE sessoes_estudo ADD COLUMN tipo VARCHAR(20) DEFAULT 'estudo'"))
+        if "duracao_segundos" not in columns:
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE sessoes_estudo ADD COLUMN duracao_segundos INTEGER"))
 
     if "plano_semanal" in tables:
         columns = {column["name"] for column in inspector.get_columns("plano_semanal")}
